@@ -21,7 +21,9 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("FPSgame")
 clock = pygame.time.Clock()
+
 #載入圖片
+# print (os.path.join("img","background.png"))
 background_img = pygame.image.load(os.path.join("img","background.png")).convert()
 player_img = pygame.image.load(os.path.join("img","player.png")).convert()
 bullet_img = pygame.image.load(os.path.join("img","bullet.png")).convert()
@@ -35,7 +37,7 @@ expl_sounds = [
     pygame.mixer.Sound(os.path.join("sound","expl1.wav"))
 ]
 pygame.mixer.music.load(os.path.join("sound","background.ogg"))
-pygame.mixer.music.set_volume(0.4)
+pygame.mixer.music.set_volume(0.05)
 
 
 font_name = os.path.join("font.ttf")
@@ -64,19 +66,90 @@ def draw_health(surf,hp,x,y):
     pygame.draw.rect(surf,WHITE,outline_rect,2)
 
 def draw_init():
-    draw_text(screen,'C109118205羅志文',32,WIDTH/2,HEIGHT/4)
-    draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
-    draw_text(screen,'按任意鍵開始遊戲!',18,WIDTH/2,HEIGHT*3/4)
-    pygame.display.update()
+    width = 600
+    height = 300
+    color_background = (0, 0, 0)
+    color_inactive = (100, 100, 200)
+    color_active = (200, 200, 255)
+    color_inactive2 = (100, 100, 200)
+    color_active2 = (200, 200, 255)
+    color = color_inactive
+    color2 = color_inactive2
+
+    font = pygame.font.Font(None, 32)
+    text = ""
+    text2 = ""
+
+    active = False
+    active1 = False
+
     waiting = True
+    
+    input_box = pygame.Rect(100, 100, 140, 32)
+    input_box2 = pygame.Rect(100, 100, 140, 32)
+
+    pygame.display.update()
+
     while waiting:
         clock.tick(FPS) #更新畫面FPS
     #取得輸入
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
+        #     elif event.type == pygame.KEYUP:
+        #         waiting = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYUP:
                 waiting = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                active = True if input_box.collidepoint(event.pos) else False
+                active1 = True if input_box2.collidepoint(event.pos) else False
+
+                # Change the current color of the input box
+                color = color_active if active else color_inactive
+                color2 = color_active2 if active1 else color_inactive2
+
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        print(text)
+                        text = ""
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
+                if active1:
+                    if event.key == pygame.K_RETURN:
+                        print(text2)
+                        text2 = ""
+                        waiting = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        text2 = text2[:-1]
+                    else:
+                        text2 += event.unicode
+
+        # Input box
+        text_surface = font.render(text, True, color)
+        text_surface2 = font.render(text2, True, color2)
+
+        input_box_width = max(200, text_surface.get_width()+10)
+        input_box_width2 = max(200, text_surface2.get_width()+10)
+
+        input_box.w = input_box_width
+        input_box2.w = input_box_width2
+        input_box.center = (width/2, height/2)
+        input_box2.center = (width/2, height/2.5)
+
+        # Updates
+        screen.fill(color_background)
+        screen.blit(text_surface, (input_box.x+5, input_box.y+5))
+        screen.blit(text_surface2, (input_box2.x+5, input_box2.y+5))
+        pygame.draw.rect(screen, color, input_box, 3)
+        pygame.draw.rect(screen, color2, input_box2, 3)
+        # draw_text(screen,'C109118205羅志文',32,WIDTH/2,HEIGHT/4)
+        # draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
+        # draw_text(screen,'按任意鍵開始遊戲!',18,WIDTH/2,HEIGHT*3/4)
+        pygame.display.flip()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -174,6 +247,7 @@ score = 0
 pygame.mixer.music.play(-1)
 show_init = True
 running = True
+
 while running:
     if show_init:
         draw_init()
@@ -202,6 +276,7 @@ while running:
 
         if player.health <= 0:
             running = False
+    
     #畫面顯示
     screen.fill(BLACK)
     screen.blit(background_img,(0,0))
