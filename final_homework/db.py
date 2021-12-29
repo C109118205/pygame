@@ -1,10 +1,7 @@
 import mariadb
 import sys
-
 try:
-    conn = mariadb.connect(
-        
-
+    
     )
     print('DB connected OK')
 except mariadb.Error as e:
