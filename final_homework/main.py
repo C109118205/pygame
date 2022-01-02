@@ -1,7 +1,7 @@
 import pygame,os
 from pygame import key
 import random
-
+import db_config
 from pygame import font
 from pygame import draw
 from pygame.event import wait
@@ -21,6 +21,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("FPSgame")
 clock = pygame.time.Clock()
+
 
 #載入圖片
 # print (os.path.join("img","background.png"))
@@ -66,6 +67,7 @@ def draw_health(surf,hp,x,y):
     pygame.draw.rect(surf,WHITE,outline_rect,2)
 
 def draw_init():
+    global running
     width = 600
     height = 300
     color_background = (0, 0, 0)
@@ -77,18 +79,33 @@ def draw_init():
     color2 = color_inactive2
 
     font = pygame.font.Font(None, 32)
+    button_color = (200,200,200)
+    button_text = font.render("login", True, button_color)
+    button_clicked = font.render("Clicked", True, button_color)
+    button_rect = pygame.Rect(200, 200, 70, 30)
+    
+    Quit_button_text = font.render("QUIT", True, button_color)
+    Quit_button_clicked = font.render("QUIT_Clicked", True, button_color)
+    Quit_button_rect = pygame.Rect(100, 200, 70, 30)
+
+    register_button_text = font.render("Register", True, button_color)
+    register_button_clicked = font.render("Register_Clicked", True, button_color)
+    register_button_rect = pygame.Rect(300, 200, 100, 30)
+  
+
     text = ""
     text2 = ""
 
     active = False
     active1 = False
 
-    waiting = True
     
     input_box = pygame.Rect(100, 100, 140, 32)
     input_box2 = pygame.Rect(100, 100, 140, 32)
 
     pygame.display.update()
+
+    waiting = True
 
     while waiting:
         clock.tick(FPS) #更新畫面FPS
@@ -100,33 +117,50 @@ def draw_init():
         #         waiting = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                waiting = False
+                running = False
+                return running
             if event.type == pygame.MOUSEBUTTONDOWN:
                 active = True if input_box.collidepoint(event.pos) else False
                 active1 = True if input_box2.collidepoint(event.pos) else False
-
                 # Change the current color of the input box
                 color = color_active if active else color_inactive
                 color2 = color_active2 if active1 else color_inactive2
 
-            if event.type == pygame.KEYDOWN:
-                if active:
-                    if event.key == pygame.K_RETURN:
-                        print(text)
-                        text = ""
-                    elif event.key == pygame.K_BACKSPACE:
-                        text = text[:-1]
+            if event.type == pygame.MOUSEBUTTONUP:
+                button_clicked = True if button_rect.collidepoint(event.pos) else False
+                Quit_button_clicked = True if Quit_button_rect.collidepoint(event.pos) else False
+                register_button_clicked = True if register_button_rect.collidepoint(event.pos) else False
+
+                if Quit_button_clicked:
+                    waiting = False
+                    running = False
+                    return running
+
+                if register_button_clicked:
+                    db_config.register(text2,text)
+
+                if button_clicked:     
+                    if db_config.login(text2,text) == 1:
+                        waiting=False
                     else:
-                        text += event.unicode
+                        waiting=True
+
+            if event.type == pygame.KEYDOWN:
                 if active1:
                     if event.key == pygame.K_RETURN:
                         print(text2)
-                        text2 = ""
-                        waiting = False
                     elif event.key == pygame.K_BACKSPACE:
                         text2 = text2[:-1]
                     else:
                         text2 += event.unicode
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        print(text)
+
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
 
         # Input box
         text_surface = font.render(text, True, color)
@@ -142,14 +176,36 @@ def draw_init():
 
         # Updates
         screen.fill(color_background)
+        screen.blit(background_img,(0,0))
+        screen.blit(button_text,button_rect)
+        screen.blit(Quit_button_text,Quit_button_rect)
+        screen.blit(register_button_text,register_button_rect)
+
         screen.blit(text_surface, (input_box.x+5, input_box.y+5))
         screen.blit(text_surface2, (input_box2.x+5, input_box2.y+5))
+
         pygame.draw.rect(screen, color, input_box, 3)
         pygame.draw.rect(screen, color2, input_box2, 3)
+        pygame.draw.rect(screen, button_color, button_rect, 2)
+        pygame.draw.rect(screen, button_color, Quit_button_rect, 2)
+        pygame.draw.rect(screen, button_color, register_button_rect, 2)
+
         # draw_text(screen,'C109118205羅志文',32,WIDTH/2,HEIGHT/4)
         # draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
         # draw_text(screen,'按任意鍵開始遊戲!',18,WIDTH/2,HEIGHT*3/4)
         pygame.display.flip()
+def end_init():
+    end=True
+
+    while end:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                end = False
+        screen.fill(BLACK)
+        screen.blit(background_img,(0,0))
+        all_sprites.draw(screen)
+        pygame.display.update()
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -246,7 +302,9 @@ for i in range(8):
 score = 0
 pygame.mixer.music.play(-1)
 show_init = True
+
 running = True
+
 
 while running:
     if show_init:
@@ -274,7 +332,7 @@ while running:
         player.health -= hit.radius        
         new_rock()
 
-        if player.health <= 0:
+        if player.health <= 0:        
             running = False
     
     #畫面顯示
