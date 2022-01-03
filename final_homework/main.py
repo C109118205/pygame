@@ -86,15 +86,19 @@ def draw_init():
     
     Quit_button_text = font.render("QUIT", True, button_color)
     Quit_button_clicked = font.render("QUIT_Clicked", True, button_color)
-    Quit_button_rect = pygame.Rect(100, 200, 70, 30)
+    Quit_button_rect = pygame.Rect(20, 550, 70, 30)
 
     register_button_text = font.render("Register", True, button_color)
     register_button_clicked = font.render("Register_Clicked", True, button_color)
     register_button_rect = pygame.Rect(300, 200, 100, 30)
-  
 
-    text = ""
-    text2 = ""
+    select_score_button_text = font.render("select score", True, button_color)
+    select_score_button_clicked = font.render(" select score Clicked", True, button_color)
+    select_score_button_rect = pygame.Rect(300, 250, 130, 30)
+
+    global user,password
+    passowrd = ""
+    user = ""
 
     active = False
     active1 = False
@@ -130,6 +134,10 @@ def draw_init():
                 button_clicked = True if button_rect.collidepoint(event.pos) else False
                 Quit_button_clicked = True if Quit_button_rect.collidepoint(event.pos) else False
                 register_button_clicked = True if register_button_rect.collidepoint(event.pos) else False
+                select_score_button_clicked = True if select_score_button_rect.collidepoint(event.pos) else False
+                
+                if select_score_button_clicked:
+                    db_config.select_score(user)
 
                 if Quit_button_clicked:
                     waiting = False
@@ -137,10 +145,10 @@ def draw_init():
                     return running
 
                 if register_button_clicked:
-                    db_config.register(text2,text)
+                    db_config.register(user,passowrd)
 
                 if button_clicked:     
-                    if db_config.login(text2,text) == 1:
+                    if db_config.login(user,passowrd) == 1:
                         waiting=False
                     else:
                         waiting=True
@@ -148,23 +156,23 @@ def draw_init():
             if event.type == pygame.KEYDOWN:
                 if active1:
                     if event.key == pygame.K_RETURN:
-                        print(text2)
+                        print(user)
                     elif event.key == pygame.K_BACKSPACE:
-                        text2 = text2[:-1]
+                        user = user[:-1]
                     else:
-                        text2 += event.unicode
+                        user += event.unicode
                 if active:
                     if event.key == pygame.K_RETURN:
-                        print(text)
+                        print(passowrd)
 
                     elif event.key == pygame.K_BACKSPACE:
-                        text = text[:-1]
+                        passowrd = passowrd[:-1]
                     else:
-                        text += event.unicode
+                        passowrd += event.unicode
 
         # Input box
-        text_surface = font.render(text, True, color)
-        text_surface2 = font.render(text2, True, color2)
+        text_surface = font.render(passowrd, True, color)
+        text_surface2 = font.render(user, True, color2)
 
         input_box_width = max(200, text_surface.get_width()+10)
         input_box_width2 = max(200, text_surface2.get_width()+10)
@@ -180,6 +188,7 @@ def draw_init():
         screen.blit(button_text,button_rect)
         screen.blit(Quit_button_text,Quit_button_rect)
         screen.blit(register_button_text,register_button_rect)
+        screen.blit(select_score_button_text,select_score_button_rect)
 
         screen.blit(text_surface, (input_box.x+5, input_box.y+5))
         screen.blit(text_surface2, (input_box2.x+5, input_box2.y+5))
@@ -189,6 +198,7 @@ def draw_init():
         pygame.draw.rect(screen, button_color, button_rect, 2)
         pygame.draw.rect(screen, button_color, Quit_button_rect, 2)
         pygame.draw.rect(screen, button_color, register_button_rect, 2)
+        pygame.draw.rect(screen, button_color, select_score_button_rect, 2)
 
         # draw_text(screen,'C109118205羅志文',32,WIDTH/2,HEIGHT/4)
         # draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
@@ -296,7 +306,7 @@ rocks = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 player = Player()
 all_sprites.add(player)
-
+global score
 for i in range(8):
     new_rock()
 score = 0
@@ -332,7 +342,8 @@ while running:
         player.health -= hit.radius        
         new_rock()
 
-        if player.health <= 0:        
+        if player.health <= 0:
+            db_config.create_score(user,score)   
             running = False
     
     #畫面顯示

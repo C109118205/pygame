@@ -51,6 +51,18 @@ def register(name,password):
     else:
         print('account already Created')
 
-        
+def create_score(name,score):
+
+    created_score = conn.cursor()
+    created_score.execute('INSERT INTO score (name,score) VALUES (?, ?)',(name,score))
+    conn.commit()
+    print('insert OK')
+
+def select_score(name):
+    show_score = conn.cursor()
+    show_score.execute('SELECT name,score FROM score where binary name = ?', (name,))
+    show_score_result = show_score.fetchall()
+    print(show_score_result)
+
 # Get Cursor
 cur = conn.cursor()
