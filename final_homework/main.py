@@ -1,6 +1,7 @@
 import pygame,os
 from pygame import key
 import random
+import re
 import db_config
 from pygame import font
 from pygame import draw
@@ -82,23 +83,25 @@ def draw_init():
     button_color = (200,200,200)
     button_text = font.render("login", True, button_color)
     button_clicked = font.render("Clicked", True, button_color)
-    button_rect = pygame.Rect(200, 200, 70, 30)
+    button_rect = pygame.Rect(200, 200, 60, 30)
     
     Quit_button_text = font.render("QUIT", True, button_color)
     Quit_button_clicked = font.render("QUIT_Clicked", True, button_color)
-    Quit_button_rect = pygame.Rect(20, 550, 70, 30)
+    Quit_button_rect = pygame.Rect(20, 550, 60, 25)
 
     register_button_text = font.render("Register", True, button_color)
     register_button_clicked = font.render("Register_Clicked", True, button_color)
     register_button_rect = pygame.Rect(300, 200, 100, 30)
 
-    select_score_button_text = font.render("select score", True, button_color)
+    select_score_button_text = font.render("score", True, button_color)
     select_score_button_clicked = font.render(" select score Clicked", True, button_color)
-    select_score_button_rect = pygame.Rect(300, 250, 130, 30)
+    select_score_button_rect = pygame.Rect(100, 200, 65, 30)
 
-    global user,password
+    global user,password,message,get_score
     passowrd = ""
     user = ""
+    message = ""
+    get_score=['']
 
     active = False
     active1 = False
@@ -137,7 +140,12 @@ def draw_init():
                 select_score_button_clicked = True if select_score_button_rect.collidepoint(event.pos) else False
                 
                 if select_score_button_clicked:
-                    db_config.select_score(user)
+                    # message = str(db_config.select_score(user))
+                    # print(message)
+                    for i in db_config.select_score(user):
+                        meg = re.sub(r"[^a-zA-Z0-9]","",str(i))
+                        message = "{}{}{}".format(user," score is:",meg)
+                        get_score.append(message)
 
                 if Quit_button_clicked:
                     waiting = False
@@ -200,7 +208,10 @@ def draw_init():
         pygame.draw.rect(screen, button_color, register_button_rect, 2)
         pygame.draw.rect(screen, button_color, select_score_button_rect, 2)
 
-        # draw_text(screen,'C109118205羅志文',32,WIDTH/2,HEIGHT/4)
+
+        for i in range(len(get_score)):
+            draw_text(screen,str(get_score[i]),32,(WIDTH/2),200+i*50)
+
         # draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
         # draw_text(screen,'按任意鍵開始遊戲!',18,WIDTH/2,HEIGHT*3/4)
         pygame.display.flip()

@@ -1,15 +1,27 @@
 import mariadb
-import sys
+import sys,re
 
 try:
-    
+    conn = mariadb.connect(
+        user="root",
+        password="Skills39",
+        host="mbeut.ml",
+        port=3306,
+        database="pygame_db"
+    )
     print('DB connected OK')
 except mariadb.Error as e:
     print(f"DB connected error: {e}")
     sys.exit(1)
 
 class connect():
-    
+    conn = mariadb.connect(
+        user="root",
+        password="Skills39",
+        host="mbeut.ml",
+        port=3306,
+        database="pygame_db"
+    )
 def select_user(name,password):
     accountcheck = conn.cursor()
     accountcheck.execute('SELECT name FROM account where binary name = ?', (name,))
@@ -59,10 +71,20 @@ def create_score(name,score):
     print('insert OK')
 
 def select_score(name):
+    # show_score_name = conn.cursor()
+    # show_score_name.execute('SELECT name FROM score where binary name = ?', (name,))
+    # show_score_name_result = show_score_name.fetchall()
+    # print(show_score_name_result)
     show_score = conn.cursor()
-    show_score.execute('SELECT name,score FROM score where binary name = ?', (name,))
+    show_score.execute('SELECT score FROM score where binary name = ?', (name,))
     show_score_result = show_score.fetchall()
-    print(show_score_result)
+    # for i in show_score_result:
+    #     meg = re.sub(r"[^a-zA-Z0-9]","",str(i))
+        # message="user:",name, "score:",meg
+    return show_score_result
 
+    
+# select_score('user01')    
+    # return show_score_result
 # Get Cursor
 cur = conn.cursor()
