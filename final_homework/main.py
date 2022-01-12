@@ -6,6 +6,8 @@ import db_config
 from pygame import font
 from pygame import draw
 from pygame.event import wait
+from tkinter import *
+from tkinter import messagebox
 
 WIDTH = 500
 HEIGHT = 600
@@ -97,6 +99,12 @@ def draw_init():
     select_score_button_clicked = font.render(" select score Clicked", True, button_color)
     select_score_button_rect = pygame.Rect(100, 200, 65, 30)
 
+
+    rule_button_text = font.render("rule", True, button_color)
+    rule_button_clicked = font.render("ruleed", True, button_color)
+    rule_button_rect = pygame.Rect(100, 550, 65, 30)
+
+
     global user,password,message,get_score
     passowrd = ""
     user = ""
@@ -138,10 +146,13 @@ def draw_init():
                 Quit_button_clicked = True if Quit_button_rect.collidepoint(event.pos) else False
                 register_button_clicked = True if register_button_rect.collidepoint(event.pos) else False
                 select_score_button_clicked = True if select_score_button_rect.collidepoint(event.pos) else False
+                rule_button_clicked = True if rule_button_rect.collidepoint(event.pos) else False
                 
+                if rule_button_clicked:
+                    Tk().wm_withdraw() #to hide the main window
+                    messagebox.showinfo('規則',"w,s,a,d:上下左右移動，space射擊")
+
                 if select_score_button_clicked:
-                    # message = str(db_config.select_score(user))
-                    # print(message)
                     for i in db_config.select_score(user):
                         meg = re.sub(r"[^a-zA-Z0-9]","",str(i))
                         message = "{}{}{}".format(user," score is:",meg)
@@ -153,12 +164,24 @@ def draw_init():
                     return running
 
                 if register_button_clicked:
-                    db_config.register(user,passowrd)
+
+                    if db_config.register(user,passowrd)==1:
+                        Tk().wm_withdraw() #to hide the main window
+                        messagebox.showinfo('註冊',"註冊成功")
+                    else:
+                        Tk().wm_withdraw() #to hide the main window
+                        messagebox.showinfo('註冊',"註冊失敗，帳號已存在")
 
                 if button_clicked:     
                     if db_config.login(user,passowrd) == 1:
                         waiting=False
+                    elif db_config.login(user,passowrd) == 2:
+                        Tk().wm_withdraw() #to hide the main window
+                        messagebox.showinfo('登入',"密碼錯誤")
+                        waiting=True
                     else:
+                        Tk().wm_withdraw() #to hide the main window
+                        messagebox.showinfo('登入',"帳號不存在")
                         waiting=True
 
             if event.type == pygame.KEYDOWN:
@@ -197,6 +220,7 @@ def draw_init():
         screen.blit(Quit_button_text,Quit_button_rect)
         screen.blit(register_button_text,register_button_rect)
         screen.blit(select_score_button_text,select_score_button_rect)
+        screen.blit(rule_button_text,rule_button_rect)
 
         screen.blit(text_surface, (input_box.x+5, input_box.y+5))
         screen.blit(text_surface2, (input_box2.x+5, input_box2.y+5))
@@ -207,26 +231,15 @@ def draw_init():
         pygame.draw.rect(screen, button_color, Quit_button_rect, 2)
         pygame.draw.rect(screen, button_color, register_button_rect, 2)
         pygame.draw.rect(screen, button_color, select_score_button_rect, 2)
+        pygame.draw.rect(screen, button_color, rule_button_rect, 2)
 
 
         for i in range(len(get_score)):
-            draw_text(screen,str(get_score[i]),32,(WIDTH/2),200+i*50)
+            draw_text(screen,str(get_score[i]), 16,(WIDTH/2),200+i*50)
 
         # draw_text(screen,'AD左右移動飛船 space發射子彈',22,WIDTH/2,HEIGHT/2)
         # draw_text(screen,'按任意鍵開始遊戲!',18,WIDTH/2,HEIGHT*3/4)
         pygame.display.flip()
-def end_init():
-    end=True
-
-    while end:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                end = False
-        screen.fill(BLACK)
-        screen.blit(background_img,(0,0))
-        all_sprites.draw(screen)
-        pygame.display.update()
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -339,24 +352,46 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 player.shoot()
-    #更新畫面
-    all_sprites.update()
-    hits = pygame.sprite.groupcollide(rocks,bullets,True,True)
-    for hit in hits:
-        random.choice(expl_sounds).play()
-        score += hit.radius
-        new_rock()
+#更新畫面
+# 第一關
+    if score <= 100:
+        all_sprites.update()
+        hits = pygame.sprite.groupcollide(rocks,bullets,True,True)
+        for hit in hits:
+            random.choice(expl_sounds).play()
+            score += hit.radius
+            new_rock()
 
 
-    hits = pygame.sprite.spritecollide(player,rocks,True,pygame.sprite.collide_circle)
-    for hit in hits:
-        player.health -= hit.radius        
-        new_rock()
+        hits = pygame.sprite.spritecollide(player,rocks,True,pygame.sprite.collide_circle)
+        for hit in hits:
+            player.health -= hit.radius        
+            new_rock()
 
-        if player.health <= 0:
-            db_config.create_score(user,score)   
-            running = False
-    
+            if player.health <= 0:
+                db_config.create_score(user,score)  
+                running = False
+# 第二關
+    if score > 100:
+        all_sprites.update()
+        hits = pygame.sprite.groupcollide(rocks,bullets,True,True)
+        for hit in hits:
+            random.choice(expl_sounds).play()
+            score += hit.radius
+            new_rock()
+
+
+        hits = pygame.sprite.spritecollide(player,rocks,True,pygame.sprite.collide_circle)
+        player.health =50 
+        for hit in hits:
+            player.health -= hit.radius        
+            new_rock()
+
+            if player.health <= 0:
+                db_config.create_score(user,score)  
+                running = False
+# 第三關
+
     #畫面顯示
     screen.fill(BLACK)
     screen.blit(background_img,(0,0))
@@ -364,4 +399,5 @@ while running:
     draw_text(screen,str(score),18,WIDTH/2,10)
     draw_health(screen,player.health,5,15)
     pygame.display.update()
+
 pygame.quit()

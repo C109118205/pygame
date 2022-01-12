@@ -47,10 +47,10 @@ def login(name,password):
         return 1
     elif select_user(name,password)== 2:
         print('password error')
-        return 0            
+        return 2         
     else:
         print('account does not exist')            
-        return 0            
+        return 0         
 
 def register(name,password):
     if select_user(name,password) == 0:
@@ -59,9 +59,10 @@ def register(name,password):
     # account_result = account_create.fetchall()
         conn.commit()
         print('account Created OK!!!!')
-
+        return 1
     else:
         print('account already Created')
+        return 0
 
 def create_score(name,score):
 
